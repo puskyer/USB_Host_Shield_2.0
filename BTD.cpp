@@ -380,6 +380,12 @@ uint8_t BTD::Poll() {
         return 0;
 }
 
+void BTD::disconnect() {
+        for(uint8_t i = 0; i < BTD_NUM_SERVICES; i++)
+                if(btService[i])
+                        btService[i]->disconnect();
+};
+
 void BTD::HCI_event_task() {
         uint16_t length = BULK_MAXPKTSIZE; // Request more than 16 bytes anyway, the inTransfer routine will take care of this
         uint8_t rcode = pUsb->inTransfer(bAddress, epInfo[ BTD_EVENT_PIPE ].epAddr, &length, hcibuf); // Input on endpoint 1
@@ -511,6 +517,7 @@ void BTD::HCI_event_task() {
                                                 if(remote_name[i] == '\0') // End of string
                                                         break;
                                         }
+                                        // TODO: Altid sæt '\0' i remote name!
                                         hci_set_flag(HCI_FLAG_REMOTE_NAME_COMPLETE);
                                 }
                                 break;
@@ -1336,7 +1343,7 @@ void BTD::setBdaddr(uint8_t* bdaddr) {
                 buf[i + 2] = bdaddr[5 - i]; // Copy into buffer, has to be written reversed, so it is MSB first
 
         // bmRequest = Host to device (0x00) | Class (0x20) | Interface (0x01) = 0x21, bRequest = Set Report (0x09), Report ID (0xF5), Report Type (Feature 0x03), interface (0x00), datalength, datalength, data
-        pUsb->ctrlReq(bAddress, epInfo[BTD_CONTROL_PIPE].epAddr, bmREQ_HID_OUT, HID_REQUEST_SET_REPORT, 0xF5, 0x03, 0x00, 8, 8, buf, NULL);
+        pUsb->ctrlReq(bAddress, epInfo[BTD_CONTROL_PIPE].epAddr, bmREQ_HIDOUT, HID_REQUEST_SET_REPORT, 0xF5, 0x03, 0x00, 8, 8, buf, NULL);
 }
 
 void BTD::setMoveBdaddr(uint8_t* bdaddr) {
@@ -1352,5 +1359,5 @@ void BTD::setMoveBdaddr(uint8_t* bdaddr) {
                 buf[i + 1] = bdaddr[i];
 
         // bmRequest = Host to device (0x00) | Class (0x20) | Interface (0x01) = 0x21, bRequest = Set Report (0x09), Report ID (0x05), Report Type (Feature 0x03), interface (0x00), datalength, datalength, data
-        pUsb->ctrlReq(bAddress, epInfo[BTD_CONTROL_PIPE].epAddr, bmREQ_HID_OUT, HID_REQUEST_SET_REPORT, 0x05, 0x03, 0x00, 11, 11, buf, NULL);
+        pUsb->ctrlReq(bAddress, epInfo[BTD_CONTROL_PIPE].epAddr, bmREQ_HIDOUT, HID_REQUEST_SET_REPORT, 0x05, 0x03, 0x00, 11, 11, buf, NULL);
 }
